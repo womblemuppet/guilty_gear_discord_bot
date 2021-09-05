@@ -7,6 +7,8 @@ class DiscordBot
       room_id: "",
       room_id_last_updated: nil
     }
+
+    @number_of_goodbots = 0
   end
 
   def start
@@ -14,12 +16,17 @@ class DiscordBot
     @bot.run()
   end
 
-  def get_emoji(bot, character)
+  def get_emoji(character)
     @bot.find_emoji(character[:name].downcase)
   end
 
   def users
     @bot.users.map { |u| u[1] }
+  end
+
+  def get_nickname_on_server(server)
+    member = @bot.bot_user.on(server)
+    return member.nickname
   end
   
   def users_on_discord
@@ -44,5 +51,18 @@ class DiscordBot
     **#{StartingQuote.random_line(2)}**
     **#{StartingQuote.random_line(3)}**
     MSG
+  end
+
+  def choose_line_number_for_quote(quote)
+    return case quote.length
+    when 0..8
+      3
+    when 9..15
+      2
+    when 16..25
+      1
+    else
+      0
+    end
   end
 end

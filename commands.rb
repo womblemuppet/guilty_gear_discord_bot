@@ -108,5 +108,38 @@ class DiscordBot
       
       next msg
     end
+
+    @bot.command(:startingquote, min_args: 0, max_args: 0, description: 'Prints an Arc-sys approved round start message', usage: '!startingquote') do
+      next generate_starting_quote()
+    end
+
+    @bot.command(:addquote, min_args: 1, description: "Adds a quote to the pool for !startingquote . If a digit is the last character it will set which line of the quote it will become when picked", usage: "!addquote words [number]") do |_event, *args|
+
+      line_number_specified = args.last =~ /[1-4]/
+
+      if line_number_specified
+        *quote_words, line_number = args
+        quote = quote_words.join(" ")
+      else
+        quote_words = args
+        quote = quote_words.join(" ")
+        line_number = choose_line_number_for_quote(quote)
+      end
+      
+      new_quote = StartingQuote.new(line: line_number, text: quote)
+      new_quote.save()
+
+      next "Added \"#{quote}\" to the quote pool (chose line #{line_number})"
+    end
+  
+    @bot.command(:goodbot, max_args: 0, description: 'Pet the bot', usage: '!goodbot') do |event, *args|
+      nickname = get_nickname_on_server(event.server)
+
+      @number_of_goodbots += 1
+
+      time_str = @number_of_goodbots == 1 ? "time" : "times"
+
+      next "#{nickname} smiles proudly. They have been called a good bot #{@number_of_goodbots} #{time_str} since waking up."
+    end
   end
 end
