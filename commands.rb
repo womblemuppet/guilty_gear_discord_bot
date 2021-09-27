@@ -129,7 +129,7 @@ class DiscordBot
       new_quote = StartingQuote.new(line: line_number, text: quote)
       new_quote.save()
 
-      next "Added \"#{quote}\" to the quote pool (chose line #{line_number})"
+      next "Added \"#{quote}\" to the quote pool (chose line #{line_number + 1})"
     end
   
     @bot.command(:goodbot, max_args: 0, description: 'Pet the bot', usage: '!goodbot') do |event, *args|
