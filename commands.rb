@@ -98,8 +98,6 @@ class DiscordBot
 
       nicknames = character.get_nicknames()
       next "No nicknames for #{emoji}#{character[:name]}" if nicknames.empty?
-
-
       
       msg = <<~MSG
       Nicknames for #{emoji}#{character[:name]}
@@ -135,11 +133,16 @@ class DiscordBot
     @bot.command(:goodbot, max_args: 0, description: 'Pet the bot', usage: '!goodbot') do |event, *args|
       nickname = get_nickname_on_server(event.server)
 
-      @number_of_goodbots += 1
+      @number_of_goodbots_since_sleep += 1
+      bot_metadata = BotMetadata.first
+      bot_metadata[:total_good_bots] += 1
+      bot_metadata.save()
 
-      time_str = @number_of_goodbots == 1 ? "time" : "times"
+      time_str = -> (n) { n == 1 ? "time" : "times" }
+      sleep_time_str = time_str.call(@number_of_goodbots_since_sleep)
+      total_time_str = time_str.call(bot_metadata[:total_good_bots])
 
-      next "#{nickname} smiles proudly. They have been called a good bot #{@number_of_goodbots} #{time_str} since waking up."
+      next "#{nickname} smiles proudly. They have been called a good bot **#{@number_of_goodbots_since_sleep}** #{sleep_time_str} since waking up (**#{bot_metadata[:total_good_bots]}** #{total_time_str} total)"
     end
   end
 end

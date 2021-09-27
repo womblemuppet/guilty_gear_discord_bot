@@ -4,6 +4,10 @@ end
 class CharacterNickname < ActiveRecord::Base
 end
 
+class BotMetadata < ActiveRecord::Base
+  self.table_name = "bot_metadata"
+end
+
 class StartingQuote < ActiveRecord::Base
   def self.random_line(line_no)
     StartingQuote.where(line: line_no).sample[:text]
@@ -20,7 +24,7 @@ class Character < ActiveRecord::Base
     nickname_result = CharacterNickname.find_by(text: query_str)
     return Character.find_by(id: nickname_result[:character]) if nickname_result
 
-    nil
+    return nil
   end
 
   def get_nicknames

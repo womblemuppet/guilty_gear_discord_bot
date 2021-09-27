@@ -10,8 +10,6 @@ require_relative 'commands.rb'
 require_relative 'discord_bot.rb'
 require_relative 'models.rb'
 
-DISCORD_ACTIVITY_TYPE_GAME = 0
-
 def load_config
   configuration_file = File.read("./botconfig.yaml")
   return YAML.load(configuration_file)

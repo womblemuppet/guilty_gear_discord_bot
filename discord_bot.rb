@@ -1,6 +1,15 @@
 class DiscordBot
+  DISCORD_ACTIVITY_TYPE_GAME = 0
+
   def initialize(config)
-    @bot = Discordrb::Commands::CommandBot.new(token: config['TOKEN'], client_id: config['CLIENT_ID'], prefix: '!', intents: :all)
+    options = { 
+      token: config['TOKEN'],
+      client_id: config['CLIENT_ID'],
+      prefix: '!',
+      intents: :all
+    }
+
+    @bot = Discordrb::Commands::CommandBot.new(options)
     puts "Started GG bot at #{Time.now.strftime('%d %b - %H:%M:%S')}!"
     
     @general_data = {
@@ -8,7 +17,7 @@ class DiscordBot
       room_id_last_updated: nil
     }
 
-    @number_of_goodbots = 0
+    @number_of_goodbots_since_sleep = 0
   end
 
   def start
