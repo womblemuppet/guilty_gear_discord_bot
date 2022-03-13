@@ -1,7 +1,7 @@
 class DiscordBot
   def set_commands
     @bot.command(:random, min_args: 0, max_args: 0, description: 'Prints a random character emoji', usage: '!random') do
-      random_character = Character.all.sample
+      random_character = Character.random_character()
       next get_emoji(random_character)
     end
     
@@ -11,7 +11,6 @@ class DiscordBot
       msg = <<~MSG
       #{@general_data[:room_id]}
       *Last changed #{@general_data[:room_id_last_updated]}*
-      #{playing_gg_string}
       MSG
       
       next msg
@@ -27,81 +26,6 @@ class DiscordBot
       Room id set to #{@general_data[:room_id]}
       #{generate_starting_quote}
       #{mentions_lines}
-      #{playing_gg_string}
-      MSG
-      
-      next msg
-    end
-    
-    @bot.command(:addguide, min_args: 2, description: 'Saves a guide for a character', usage: '!addguide character url') do |_event, character_name, raw_url, *description_words|
-      description = description_words.join(" ")
-
-      url = if raw_url[0..2] == "www"
-        "http://" + raw_url
-      else
-        raw_url
-      end
-
-      next "Guide must be in URL format" unless url =~ URI.regexp
-      next "Unknown character - #{character_name}" unless Character::get(character_name)
-
-      new_guide = Guide.new(url: url, character: character[:id], description: description)
-      new_guide.save!
-      
-      next "Saved guide for #{character[:name]}"
-    end
-
-    @bot.command(:getguides, min_args: 1, description: 'Gets all guides for a character', usage: '!getguides character') do |event, *character_name_words|
-      character_name = character_name_words.join(" ")
-      character = Character::get(character_name)
-      next "Unknown character - #{character_name}" unless character
-
-      guides_for_character = Guide.where(character: character[:id])
-      next "No guides for #{character[:name]} yet" if guides_for_character.count == 0
-
-      emoji = get_emoji(character)
-
-      guides_for_character.each.with_index do |guide, i|
-        new_embed = Discordrb::Webhooks::Embed.new(description: guide[:url])
-        message = if guide[:description].presence
-          "#{emoji}   **#{i + 1}**: #{guide[:description]}"
-        else
-          "#{emoji}   **#{i + 1}**: Guide #{i + 1} for #{guide[:character]}"
-        end
-
-        event.send_embed(message, new_embed)
-      end
-      
-      next nil
-    end
-
-    @bot.command(:removeguide, min_args: 2, max_args: 2, description: 'Removes a guide', usage: '!removeguide character number') do |_event, character_name, id|
-      character = Character::get(character_name)
-      next "Unknown character - #{character_name}" unless character
-      next "Number **#{id.inspect}** is not a number" unless id =~ /\d+/
-
-      guides_for_character = Guide.where(character: character[:id])
-      target_guide = guides_for_character[id.to_i - 1]
-      next "Guide with number **#{id}** does not exist" unless target_guide
-
-      target_guide.delete
-
-      next "Removed guide **#{id}**. Run !getguides to get refreshed id numbers"
-    end
-      
-    @bot.command(:getnicknames, min_args: 1, description: 'Prints all nicknames for a character', usage: '!getnicknames character') do |_event, *character_name_words|
-      character_name = character_name_words.join(" ")
-      character = Character::get(character_name)
-      next "Unknown character - #{character_name}" unless character
-
-      emoji = get_emoji(character)
-
-      nicknames = character.get_nicknames()
-      next "No nicknames for #{emoji}#{character[:name]}" if nicknames.empty?
-      
-      msg = <<~MSG
-      Nicknames for #{emoji}#{character[:name]}
-      #{nicknames.join("\n")}
       MSG
       
       next msg
@@ -144,5 +68,115 @@ class DiscordBot
 
       next "#{nickname} smiles proudly. They have been called a good bot **#{@number_of_goodbots_since_sleep}** #{sleep_time_str} since waking up (**#{bot_metadata[:total_good_bots]}** #{total_time_str} total)"
     end
+
+    @bot.command(:albums, max_args: 0, description: 'List all albums by name', usage: '!albums') do
+      albums = Album.all.pluck(:name)
+      
+      msg = <<~MSG
+      Albums:
+      #{albums.join("\n")}
+      MSG
+      
+      next msg
+    end
+
+    @bot.command(:songs, description: 'List all songs for an album', usage: '!songs album') do |_event, *album_name_args|
+      album_name = album_name_args.join(" ")
+      album = Album.find_by_name(album_name)
+      next "No album exists with that name" unless album
+
+      songs_and_ratings = Song.select("*").joins("LEFT JOIN song_ratings sr ON sr.song = songs.id").order(rating: :desc)
+      songs = songs_and_ratings.where(album: album[:id]).map { |song| "#{song[:title]} - #{song[:rating]}" }
+      
+      msg = <<~MSG
+      Songs for #{album[:name]}:
+      #{songs.join("\n")}
+      MSG
+      
+      next msg
+    end
+
+    @bot.command(:song, description: 'Lists a song and some details', usage: '!song song') do |_event, *song_title_args|
+      songs_and_ratings = Song.select("*").joins("LEFT JOIN song_ratings sr ON sr.song = songs.id").order(rating: :desc)
+
+      song_title = song_title_args.join(" ")
+      song = songs_and_ratings.find_by_title(song_title)
+      next "No song exists with that name" unless song # should get similar words?
+
+      album = Album.find_by_id(song[:album])
+      average_rating = songs_and_ratings.where(title: song_title).average(:rating)
+
+      if song[:rating]
+        ratings = songs_and_ratings.group(:song).order(rating: :desc).average(:rating).inject([]) do |acc, (song_id, rating)|
+          !rating ? acc : [*acc, { song_id: song_id, average_rating: rating.to_f}]
+        end
+
+        puts "ratings", ratings, "song[:id]", song[:song]
+
+        index = ratings.find_index { |rating| rating[:song_id] == song[:song] }
+        puts "index", index
+
+        min_index = (index - 2).clamp(0, ratings.length - 1)
+        max_index = (index + 2).clamp(0, ratings.length - 1)
+
+        target_and_peripheral_ratings = (min_index .. max_index).inject([]) do |acc, i|
+          song_title = Song.find_by_id(ratings[i][:song_id])[:title]
+          average_rating = ratings[i][:average_rating]
+
+          next [*acc, "**#{song_title} - #{average_rating}**"] if i == index
+          next [*acc, "#{song_title} - #{average_rating}"]
+        end
+
+        msg = <<~MSG
+        Song **#{song[:title]}** from **#{album[:name]}**
+
+        ...
+        #{target_and_peripheral_ratings.join("\n")}
+        ...
+        MSG
+      else
+        msg = <<~MSG
+        Song **#{song[:title]}** from **#{album[:name]}** - No rating
+        MSG
+      end
+      
+      next msg
+    end
+
+    @bot.command(:ratesong, min_args: 2, description: 'Rate a song', usage: '!ratesong song rating') do |event, *song_title_args, rating|
+      next "#{rating} is an invalid rating - please rate between 0 and 5 you muppet" unless rating =~ /\A[0-5](\.[0-9])?\z/ && (0..5).include?(rating.to_i)
+      
+      song_title = song_title_args.join(" ")
+      song = Song.find_by_title(song_title)
+      next "No song exists with that title" unless song
+
+      username = event.message.author.display_name
+      
+      previous_rating = SongRating.find_by(username: username, song: song[:id])
+      
+      if previous_rating
+        previous_rating[:rating] = rating
+        previous_rating.save()
+      else
+        new_rating = SongRating.new(song: song[:id], username: username, rating: rating)
+        new_rating.save()
+      end
+
+      next "Gave #{song_title} a rating of #{rating}"
+    end
+
+    # @bot.message() do |event|
+    #   username = event.message.author.display_name
+    #   next unless username == "Barcode"
+
+    #   next unless DateTime.now.hour.between?(1, 5)
+
+    #   msg = <<~MSG
+    #   Shaun...
+    #   #{go_to_sleep_strings.sample}
+    #   MSG
+
+    #   event.respond(msg)
+    # end
   end
 end

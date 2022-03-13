@@ -21,7 +21,7 @@ def connect_to_db(config)
     host: 'localhost',
     username: 'root',
     password: config['MYSQL_PASS'],
-    database: 'guilty_gear'
+    database: config['MYSQL_DB']
   )
 end
 
