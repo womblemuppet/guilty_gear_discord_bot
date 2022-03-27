@@ -22,8 +22,8 @@ class StartingQuoteAR < ActiveRecord::Base
 end 
 
 class StartingQuote
-  def initialize(...)
-    @ar_rec = StartingQuoteAR.new(...)
+  def initialize(*args, &block)
+    @ar_rec = StartingQuoteAR.new(*args, &block)
   end
 
   def self.random_line(line_no)
@@ -48,8 +48,8 @@ class CharacterAR < ActiveRecord::Base
 end
 
 class Character
-  def initialize(...)
-    @ar_rec = CharacterAR.new(...)
+  def initialize(*args, &block)
+    @ar_rec = CharacterAR.new(*args, &block)
   end
 
   def self.get(query_str)

@@ -80,7 +80,7 @@ class DiscordBot
       next msg
     end
 
-    @bot.command(:songs, description: 'List all songs for an album', usage: '!songs album') do |_event, *album_name_args|
+    @bot.command(:songs, min_args: 1, description: 'List all songs for an album', usage: '!songs album') do |_event, *album_name_args|
       album_name = album_name_args.join(" ")
       album = Album.find_by_name(album_name)
       next "No album exists with that name" unless album
@@ -97,7 +97,7 @@ class DiscordBot
     end
 
     @bot.command(:song, description: 'Lists a song and some details', usage: '!song song') do |_event, *song_title_args|
-      songs_and_ratings = Song.select("*").joins("LEFT JOIN song_ratings sr ON sr.song = songs.id").order(rating: :desc)
+      songs_and_ratings = Song.select("*").joins("LEFT JOIN song_ratings sr ON sr.song = songs.id")
 
       song_title = song_title_args.join(" ")
       song = songs_and_ratings.find_by_title(song_title)
@@ -106,39 +106,42 @@ class DiscordBot
       album = Album.find_by_id(song[:album])
       average_rating = songs_and_ratings.where(title: song_title).average(:rating)
 
-      if song[:rating]
-        ratings = songs_and_ratings.group(:song).order(rating: :desc).average(:rating).inject([]) do |acc, (song_id, rating)|
-          !rating ? acc : [*acc, { song_id: song_id, average_rating: rating.to_f}]
-        end
-
-        puts "ratings", ratings, "song[:id]", song[:song]
-
-        index = ratings.find_index { |rating| rating[:song_id] == song[:song] }
-        puts "index", index
-
-        min_index = (index - 2).clamp(0, ratings.length - 1)
-        max_index = (index + 2).clamp(0, ratings.length - 1)
-
-        target_and_peripheral_ratings = (min_index .. max_index).inject([]) do |acc, i|
-          song_title = Song.find_by_id(ratings[i][:song_id])[:title]
-          average_rating = ratings[i][:average_rating]
-
-          next [*acc, "**#{song_title} - #{average_rating}**"] if i == index
-          next [*acc, "#{song_title} - #{average_rating}"]
-        end
-
-        msg = <<~MSG
-        Song **#{song[:title]}** from **#{album[:name]}**
-
-        ...
-        #{target_and_peripheral_ratings.join("\n")}
-        ...
-        MSG
-      else
+      if !song[:rating]
         msg = <<~MSG
         Song **#{song[:title]}** from **#{album[:name]}** - No rating
         MSG
+        
+        next msg
       end
+
+      average_ratings = songs_and_ratings.group(:song).average(:rating)
+
+      ratings = average_ratings.inject([]) do |acc, (song_id, rating)|
+        next acc unless rating
+        next [*acc, { song_id: song_id, average_rating: rating.to_f}]
+      end.sort_by { |rating| rating[:average_rating] }.reverse
+      # Would use AR order but was running into sql_mode=only_full_group_by errors
+
+      index = ratings.find_index { |rating| rating[:song_id] == song[:song] }
+
+      min_index = (index - 4).clamp(0, ratings.length - 1)
+      max_index = (index + 4).clamp(0, ratings.length - 1)
+
+      target_and_peripheral_ratings = (min_index .. max_index).inject([]) do |acc, i|
+        song_title = Song.find_by_id(ratings[i][:song_id])[:title]
+        average_rating = ratings[i][:average_rating]
+
+        next [*acc, "**#{song_title} - #{average_rating}**"] if i == index
+        next [*acc, "#{song_title} - #{average_rating}"]
+      end
+
+      msg = <<~MSG
+      Song **#{song[:title]}** from **#{album[:name]}**
+
+      ...
+      #{target_and_peripheral_ratings.join("\n")}
+      ...
+      MSG
       
       next msg
     end
@@ -162,7 +165,15 @@ class DiscordBot
         new_rating.save()
       end
 
-      next "Gave #{song_title} a rating of #{rating}"
+      next "Gave \"#{song_title}\" a rating of #{rating}"
+    end
+
+    @bot.command(:randomsong, description: 'Chooses a random song', usage: '!randomsong') do |_event|
+      random_id = rand(Song.count)
+      random_song = Song.where("id > ?", random_id).first
+      album_name = Album.find_by_id(random_song[:album])[:name]
+
+      next "You should listen to: #{random_song[:title]} from #{album_name}"
     end
 
     # @bot.message() do |event|
