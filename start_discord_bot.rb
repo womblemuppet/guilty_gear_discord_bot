@@ -1,14 +1,13 @@
 require 'active_record'
 require 'active_support/all'
 require 'date'
+require 'discordrb'
+require 'logger'
 require 'uri'
 require 'yaml'
 
-require 'discordrb'
-
-require_relative 'commands.rb'
 require_relative 'discord_bot.rb'
-require_relative 'models.rb'
+
 
 def load_config
   configuration_file = File.read("./botconfig.yaml")
