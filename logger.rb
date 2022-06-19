@@ -1,15 +1,19 @@
 class DiscordBotLogger
-  def initialize
+  def initialize(config)
     yyyymm = DateTime.now.strftime("%Y-%m")
 
-    @logger = Logger.new("/home/ubuntu/discord_bot/log-#{yyyymm}.log")
+    @logger = Logger.new(config['LOG_DIR'] + "#{yyyymm}.log")
     
     @logger.formatter = -> (_severity, _datetime, _progname, message) do
       return "-\n" if message.blank?
       
       return "#{current_time()}: #{message}\n"
     end    
+  end
 
+  def log(msg, severity = Logger::Severity::INFO)
+    @logger.add(severity, msg)
+    puts msg
   end
 
   def current_time
@@ -17,26 +21,33 @@ class DiscordBotLogger
   end
 
   def log_event(event)
-    @logger.info("")
-    @logger.info("New command received:")
-    @logger.info("#{event.command.name} - message: #{event.message}")
-  end
+    msg = <<~MSG
+    
+    New command received:
+    "#{event.command.name} - message: #{event.message}"
+    MSG
 
-  def log(msg)
-    @logger.info(msg)
+    log(msg)
   end
 
   def log_bot_start()
-    @logger.info("")
-    @logger.info("Starting bot!")
-    @logger.info("")
+    msg = <<~MSG
+
+    Starting bot!
+
+    MSG
+    
+    log(msg)
   end
 
   def log_error(error)
-    @logger.error("An error has occurred:")
     backtrace_lines = error.backtrace.map { |msg| "- #{msg}" }.join("\n")
-    @logger.error("#{error.message}\n#{backtrace_lines}")
 
-    @logger.info("")
+    msg = <<~MSG
+    "An error has occurred:"
+    "#{error.message}\n#{backtrace_lines}"
+    MSG
+
+    log(msg)
   end
 end

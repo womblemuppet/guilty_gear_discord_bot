@@ -1,5 +1,6 @@
 require_relative 'commands.rb'
 require_relative 'logger.rb'
+require_relative 'anti_doomer/anti_doomer.rb'
 require_relative 'models/models.rb'
 require_relative 'models/character.rb'
 require_relative 'models/starting_quote.rb'
@@ -18,7 +19,6 @@ class DiscordBot
     }
 
     @bot = Discordrb::Commands::CommandBot.new(options)
-    puts "Started GG bot at #{Time.now.strftime('%d %b - %H:%M:%S')}!"
     
     @general_data = {
       room_id: "",
@@ -27,7 +27,12 @@ class DiscordBot
 
     @number_of_goodbots_since_sleep = 0
 
-    @logger = DiscordBotLogger.new()
+    @logger = DiscordBotLogger.new(config)
+
+    text_mood = TextMood.new(files: ["./lang/gamer.txt", "./lang/en.txt"])
+    @anti_doomer = AntiDoomer.new(text_mood, @logger)
+
+    puts "Started GG bot at #{Time.now.strftime('%d %b - %H:%M:%S')}!"
   end
 
   def start

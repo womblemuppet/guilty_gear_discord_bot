@@ -3,6 +3,7 @@ require 'active_support/all'
 require 'date'
 require 'discordrb'
 require 'logger'
+require 'textmood'
 require 'uri'
 require 'yaml'
 

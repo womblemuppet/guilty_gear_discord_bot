@@ -32,17 +32,35 @@ module OtherCommands
 
     bot.message() do |event|
       username = event.message.author.display_name
-      next unless username == "Barcode"
+      event_message = event.message.content
 
-      next unless DateTime.now.hour.between?(1, 5)
+      puts "DateTime.now.hour:", DateTime.now.hour, "username", username.inspect
 
-      msg = <<~MSG
-      Shaun...
-      #{go_to_sleep_strings.sample}
-      MSG
+      if username == "Barcode" && DateTime.now.hour.between?(1, 5)
+        logger.log("would be telling shaun to go to bed")
+      end
 
-      logger.log("would be sending:\n#{msg}")
+      is_dooming_about_anji = @anti_doomer.is_dooming_about_anji?(event_message)
+      if is_dooming_about_anji
+        msg = <<~MSG
+        BEEP BOOP
+        **PLEASE REFRAIN FROM DOOMING ABOUT ANJI MITO**
+        **ALL MESSAGES REGARDING ANJI MITO MUST BE SUFFICIENTLY POSITIVE**
+        MSG
+
+        event.respond(msg)
+      elsif username == "Barcode" && DateTime.now.hour.between?(1, 5)
+        msg = <<~MSG
+        Shaun...
+        #{go_to_sleep_strings.sample}
+        MSG
+
+        logger.log("would be sending:\n#{msg}")
       # event.respond(msg)
+        next ""
+      else
+        next ""
+      end
     rescue => e
       @logger.log_error(e)
       next ""
