@@ -18,7 +18,7 @@ module RoomAndQuoteCommands
       next ""
     end
     
-    bot.command(:setroom, min_args: 1, max_args: 1, description: 'Sets the room id', usage: '!room room_id')  do |_event, new_room_id|
+    bot.command(:setroom, min_args: 1, max_args: 1, description: 'Sets the room id', usage: '!room room_id')  do |event, new_room_id|
       logger.log_event(event)
 
       @general_data[:room_id] = new_room_id
@@ -51,6 +51,8 @@ module RoomAndQuoteCommands
 
       if line_number_specified
         *quote_words, line_number = args
+        line_number = line_number.to_i - 1
+
         quote = quote_words.join(" ")
       else
         quote_words = args

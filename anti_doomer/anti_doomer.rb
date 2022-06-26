@@ -45,6 +45,8 @@ class AntiDoomer
       /parry overdrive/i,
       /fuu?jin/i,
       /fan toss/i,
+      /fan super/i,
+      /fan overdrive/i,
       /ichishiki/i,
       /nagiha/i,
       /rin /i,

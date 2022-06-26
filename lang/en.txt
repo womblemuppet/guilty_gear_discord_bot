@@ -5712,7 +5712,6 @@
 0.25: treasonable
 0.25: trawl
 0.25: travesty
-0.25: trash
 0.25: transvestite
 0.25: transvestic
 0.25: transparency
