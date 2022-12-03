@@ -1,6 +1,7 @@
 require 'active_record'
 require 'active_support/all'
 require 'date'
+require 'duration'
 require 'discordrb'
 require 'logger'
 require 'textmood'

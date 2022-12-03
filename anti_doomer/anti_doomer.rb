@@ -12,7 +12,7 @@ class AntiDoomer
 
   def is_dooming_about_anji?(text)
     return false unless message_is_about_anji?(text)
-    
+
     negators = count_negators(text)
     return false if negators > 2
 
@@ -33,7 +33,7 @@ class AntiDoomer
   end
 
   def anji_regex
-    /anji('s)?([ -]?mito)?/i
+    /anji'*s*([ -]?mito)?/i
   end
 
   def anji_topics

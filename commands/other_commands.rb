@@ -30,34 +30,49 @@ module OtherCommands
       next ""
     end
 
+    bot.command(:goodbort, max_args: 0, description: 'Pet the bort', usage: '!goodbort') do |event, *args|
+      logger.log_event(event)
+
+      nickname = get_nickname_on_server(event.server)
+
+      next "#{nickname} smiles proudly. They have been called a good bort"
+    rescue => e
+      @logger.log_error(e)
+      next ""
+    end
+
     bot.message() do |event|
       username = event.message.author.display_name
       event_message = event.message.content
-
-      puts "DateTime.now.hour:", DateTime.now.hour, "username", username.inspect
 
       if username == "Barcode" && DateTime.now.hour.between?(1, 5)
         logger.log("would be telling shaun to go to bed")
       end
 
       is_dooming_about_anji = @anti_doomer.is_dooming_about_anji?(event_message)
+
       if is_dooming_about_anji
+        update_last_doom_result = update_last_doom()
+
+        seconds_since_last_doom = Time.now - update_last_doom_result[:previous_doom_time]
+        time_since_last_doom = Duration.new(seconds_since_last_doom)
+        time_str_since_last_doom = if time_since_last_doom.weeks > 0
+          time_since_last_doom.format("%w weeks %d days %h hours %m minutes %s seconds")
+        elsif time_since_last_doom.days > 0
+          time_since_last_doom.format("%d days %h hours %m minutes %s seconds")
+        else
+          time_since_last_doom.format("%h hours %m minutes %s seconds")
+        end
+
         msg = <<~MSG
         BEEP BOOP
         **PLEASE REFRAIN FROM DOOMING ABOUT ANJI MITO**
         **ALL MESSAGES REGARDING ANJI MITO MUST BE SUFFICIENTLY POSITIVE**
+
+        Time since last infraction (#{time_str_since_last_doom})
         MSG
 
         event.respond(msg)
-      elsif username == "Barcode" && DateTime.now.hour.between?(1, 5)
-        msg = <<~MSG
-        Shaun...
-        #{go_to_sleep_strings.sample}
-        MSG
-
-        logger.log("would be sending:\n#{msg}")
-      # event.respond(msg)
-        next ""
       else
         next ""
       end
@@ -80,19 +95,15 @@ module OtherCommands
     return member.nickname
   end
 
-  def go_to_sleep_strings
-    [
-      "https://www.webmd.com/sleep-disorders/benefits-sleep-more",
-      "https://www.sclhealth.org/blog/2018/09/the-benefits-of-getting-a-full-night-sleep/",
-      "https://www.healthline.com/nutrition/10-reasons-why-good-sleep-is-important",
-      "https://www.verywellhealth.com/top-health-benefits-of-a-good-nights-sleep-2223766",
-      "https://healthysleep.med.harvard.edu/healthy/matters/benefits-of-sleep",
-      "https://www.healthline.com/health/sleep-deprivation/effects-on-body",
-      "https://www.nhs.uk/live-well/sleep-and-tiredness/why-lack-of-sleep-is-bad-for-your-health/",
-      "https://www.medicalnewstoday.com/articles/307334",
-      "https://www.webmd.com/sleep-disorders/features/10-results-sleep-loss",
-      "https://www.hopkinsmedicine.org/health/wellness-and-prevention/the-effects-of-sleep-deprivation"
-    ]
+  def update_last_doom
+    bot_metadata = BotMetadata.first
+
+    previous_doom_time = bot_metadata[:last_doomed]
+    bot_metadata[:total_dooms] += 1
+    bot_metadata[:last_doomed] = DateTime.now()
+    bot_metadata.save!()
+
+    return { previous_doom_time: previous_doom_time }
   end
 
 end
