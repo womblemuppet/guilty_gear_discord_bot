@@ -86,9 +86,9 @@ module OtherCommands
       next ""
     end
 
-    bot.command(:gitpull, min_args: 1, max_args: 1, description: 'Pull latest changes', usage: '!gitpull') do |event, password|
+    bot.command(:gitpull, min_args: 1, max_args: 1, description: 'Pull latest changes', usage: '!gitpull admin_password') do |event, password|
       logger.log_event(event)
-      next "Invalid password you goober" unless password == @state[:config]["admin_password"]
+      next "Invalid password you goober" unless password.strip == @state[:config]["ADMIN_PASSWORD"]
 
       `git pull`
       next "Restarting"
