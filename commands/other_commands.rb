@@ -4,7 +4,7 @@ module OtherCommands
       logger.log_event(event)
 
       random_character = Character.random_character()
-      next get_emoji(random_character)
+      next get_emoji(random_character[:name].downcase)
     rescue => e
       @logger.log_error(e)
       next ""
@@ -68,21 +68,20 @@ module OtherCommands
         MSG
 
         event.respond(msg)
-      elsif @state[:jam_mode]
-        next jam_quotes.sample()
-      else
-        next ""
+      elsif @state[:jam_mode_timestamp] && DateTime.now < @state[:jam_mode_timestamp] + 30.minutes
+        emoji = get_emoji("bestcharacter")
+        msg = "#{emoji} #{jam_quotes.sample}"
+        event.respond(msg)
       end
     rescue => e
       @logger.log_error(e)
-      next ""
     end
 
     bot.command(:jammode, min_args: 0, max_args: 0, description: 'Starts Jam mode', usage: '!jammode') do |event|
       logger.log_event(event)
 
-      @state[:jam_mode] = true
-      next "Jam mode has been enabled. To disable, please contact technical support."
+      @state[:jam_mode_timestamp] = DateTime.now
+      next "Jam mode has been enabled. To manually disable, please contact technical support."
     rescue => e
       @logger.log_error(e)
       next ""
@@ -100,8 +99,8 @@ module OtherCommands
     end
   end
 
-  def get_emoji(character)
-    @bot.find_emoji(character[:name].downcase)
+  def get_emoji(emoji_name)
+    @bot.find_emoji(emoji_name)
   end
 
   def users
@@ -128,8 +127,8 @@ module OtherCommands
     [
       "AHAHAHAHAHAHAHAHA",
       "POWAAAAAAAAAAAAAASHO",
-      "HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH",
-      "ATTTTTTTTTTTTTTTTTAH",
+      "HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH",
+      "ATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAH",
       "WHACHAOOOOOOOOOOAH",
       "AHEHAHAHAHAHA"
     ]

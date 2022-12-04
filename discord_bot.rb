@@ -24,7 +24,7 @@ class DiscordBot
       room_id: "",
       room_id_last_updated: nil,
       number_of_goodbots_since_sleep: 0,
-      jam_mode: false,
+      jam_mode_timestamp: nil,
       config: config
     }
 
