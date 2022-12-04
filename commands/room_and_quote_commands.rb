@@ -5,11 +5,11 @@ module RoomAndQuoteCommands
     bot.command(:room, min_args: 0, max_args: 0, description: 'Prints the room id', usage: '!room') do |event|
       logger.log_event(event)
 
-      next "No room exists.\n#{playing_gg_string}" unless @general_data[:room_id].present?
+      next "No room exists.\n#{playing_gg_string}" unless @state[:room_id].present?
     
       msg = <<~MSG
-      #{@general_data[:room_id]}
-      *Last changed #{@general_data[:room_id_last_updated]}*
+      #{@state[:room_id]}
+      *Last changed #{@state[:room_id_last_updated]}*
       MSG
       
       next msg
@@ -21,13 +21,13 @@ module RoomAndQuoteCommands
     bot.command(:setroom, min_args: 1, max_args: 1, description: 'Sets the room id', usage: '!room room_id')  do |event, new_room_id|
       logger.log_event(event)
 
-      @general_data[:room_id] = new_room_id
-      @general_data[:room_id_last_updated] = Time.now.strftime('%H:%M')
+      @state[:room_id] = new_room_id
+      @state[:room_id_last_updated] = Time.now.strftime('%H:%M')
     
       mentions_lines = users_on_discord.sum { |user| "#{user.mention}\n" }
       
       msg = <<~MSG
-      Room id set to #{@general_data[:room_id]}
+      Room id set to #{@state[:room_id]}
       #{generate_starting_quote}
       #{mentions_lines}
       MSG

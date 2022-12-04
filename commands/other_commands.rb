@@ -15,16 +15,16 @@ module OtherCommands
 
       nickname = get_nickname_on_server(event.server)
 
-      @number_of_goodbots_since_sleep += 1
+      @state[:number_of_goodbots_since_sleep] += 1
       bot_metadata = BotMetadata.first
       bot_metadata[:total_good_bots] += 1
       bot_metadata.save()
 
       time_str = -> (n) { n == 1 ? "time" : "times" }
-      sleep_time_str = time_str.call(@number_of_goodbots_since_sleep)
+      sleep_time_str = time_str.call(@state[:number_of_goodbots_since_sleep])
       total_time_str = time_str.call(bot_metadata[:total_good_bots])
 
-      next "#{nickname} smiles proudly. They have been called a good bot **#{@number_of_goodbots_since_sleep}** #{sleep_time_str} since waking up (**#{bot_metadata[:total_good_bots]}** #{total_time_str} total)"
+      next "#{nickname} smiles proudly. They have been called a good bot **#{@state[:number_of_goodbots_since_sleep]}** #{sleep_time_str} since waking up (**#{bot_metadata[:total_good_bots]}** #{total_time_str} total)"
     rescue => e
       @logger.log_error(e)
       next ""
@@ -42,12 +42,7 @@ module OtherCommands
     end
 
     bot.message() do |event|
-      username = event.message.author.display_name
       event_message = event.message.content
-
-      if username == "Barcode" && DateTime.now.hour.between?(1, 5)
-        logger.log("would be telling shaun to go to bed")
-      end
 
       is_dooming_about_anji = @anti_doomer.is_dooming_about_anji?(event_message)
 
@@ -76,6 +71,27 @@ module OtherCommands
       else
         next ""
       end
+    rescue => e
+      @logger.log_error(e)
+      next ""
+    end
+
+    bot.command(:jammode, min_args: 0, max_args: 0, description: 'Starts Jam mode', usage: '!jammode') do |event|
+      logger.log_event(event)
+
+      @state[:jam_mode] = true
+      next "Jam mode has been enabled. To disable, please contact technical support."
+    rescue => e
+      @logger.log_error(e)
+      next ""
+    end
+
+    bot.command(:gitpull, min_args: 1, max_args: 1, description: 'Pull latest changes', usage: '!gitpull') do |event, password|
+      logger.log_event(event)
+      next "Invalid password you goober" unless password == @state[:config]["admin_password"]
+
+      `git pull`
+      next "Restarting"
     rescue => e
       @logger.log_error(e)
       next ""

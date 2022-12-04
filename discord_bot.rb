@@ -20,12 +20,13 @@ class DiscordBot
 
     @bot = Discordrb::Commands::CommandBot.new(options)
     
-    @general_data = {
+    @state = {
       room_id: "",
-      room_id_last_updated: nil
+      room_id_last_updated: nil,
+      number_of_goodbots_since_sleep: 0,
+      jam_mode: false,
+      config: config
     }
-
-    @number_of_goodbots_since_sleep = 0
 
     @logger = DiscordBotLogger.new(config)
 
