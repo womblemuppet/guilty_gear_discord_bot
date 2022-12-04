@@ -90,8 +90,8 @@ module OtherCommands
       logger.log_event(event)
       next "Invalid password you goober" unless password.strip == @state[:config]["ADMIN_PASSWORD"]
 
-      `git pull`
-      next "Restarting"
+      pull_result = `git pull`
+      next "Pulled: #{pull_result}"
     rescue => e
       @logger.log_error(e)
       next ""
