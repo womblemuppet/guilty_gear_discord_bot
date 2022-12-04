@@ -68,6 +68,8 @@ module OtherCommands
         MSG
 
         event.respond(msg)
+      elsif @state[:jam_mode]
+        next jam_quotes.sample()
       else
         next ""
       end
@@ -120,6 +122,17 @@ module OtherCommands
     bot_metadata.save!()
 
     return { previous_doom_time: previous_doom_time }
+  end
+
+  def jam_quotes
+    [
+      "AHAHAHAHAHAHAHAHA",
+      "POWAAAAAAAAAAAAAASHO",
+      "HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH",
+      "ATTTTTTTTTTTTTTTTTAH",
+      "WHACHAOOOOOOOOOOAH",
+      "AHEHAHAHAHAHA"
+    ]
   end
 
 end
