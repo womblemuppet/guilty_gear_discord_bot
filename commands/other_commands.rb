@@ -68,7 +68,7 @@ module OtherCommands
         MSG
 
         event.respond(msg)
-      elsif @state[:jam_mode_timestamp] && DateTime.now < @state[:jam_mode_timestamp] + 30.minutes
+      elsif @state[:jam_mode_timestamp] && DateTime.now < @state[:jam_mode_timestamp] + 4.hours
         emoji = get_emoji("bestcharacter")
         msg = "#{emoji} #{jam_quotes.sample}"
         event.respond(msg)
