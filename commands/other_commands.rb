@@ -68,7 +68,7 @@ module OtherCommands
         MSG
 
         event.respond(msg)
-      elsif @state[:jam_mode_timestamp] && DateTime.now < @state[:jam_mode_timestamp] + 4.hours
+      elsif @state[:jam_mode_timestamp] && DateTime.now < @state[:jam_mode_timestamp] + 1.hours
         emoji = get_emoji("bestcharacter")
         msg = "#{emoji} #{jam_quotes.sample}"
         event.respond(msg)
@@ -130,7 +130,10 @@ module OtherCommands
       "HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH",
       "ATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAH",
       "WHACHAOOOOOOOOOOAH",
-      "AHEHAHAHAHAHA"
+      "AHEHAHAHAHAHA",
+      "AHEHAHAHAHAHAHA",
+      "AHEHAHAHAHAHAHAHAHA",
+      "wWHATTAHH"
     ]
   end
 
