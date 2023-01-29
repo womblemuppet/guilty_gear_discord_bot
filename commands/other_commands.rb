@@ -68,23 +68,9 @@ module OtherCommands
         MSG
 
         event.respond(msg)
-      elsif @state[:jam_mode_timestamp] && DateTime.now < @state[:jam_mode_timestamp] + 1.hours
-        emoji = get_emoji("bestcharacter")
-        msg = "#{emoji} #{jam_quotes.sample}"
-        event.respond(msg)
       end
     rescue => e
       @logger.log_error(e)
-    end
-
-    bot.command(:jammode, min_args: 0, max_args: 0, description: 'Starts Jam mode', usage: '!jammode') do |event|
-      logger.log_event(event)
-
-      @state[:jam_mode_timestamp] = DateTime.now
-      next "Jam mode has been enabled. To manually disable, please contact technical support."
-    rescue => e
-      @logger.log_error(e)
-      next ""
     end
 
     bot.command(:gitpull, min_args: 1, max_args: 1, description: 'Pull latest changes', usage: '!gitpull admin_password') do |event, password|
@@ -121,20 +107,6 @@ module OtherCommands
     bot_metadata.save!()
 
     return { previous_doom_time: previous_doom_time }
-  end
-
-  def jam_quotes
-    [
-      "AHAHAHAHAHAHAHAHA",
-      "POWAAAAAAAAAAAAAASHO",
-      "HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH HUAH",
-      "ATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAH",
-      "WHACHAOOOOOOOOOOAH",
-      "AHEHAHAHAHAHA",
-      "AHEHAHAHAHAHAHA",
-      "AHEHAHAHAHAHAHAHAHA",
-      "wWHATTAHH"
-    ]
   end
 
 end
