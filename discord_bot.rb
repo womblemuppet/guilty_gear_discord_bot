@@ -24,7 +24,8 @@ class DiscordBot
       room_id: "",
       room_id_last_updated: nil,
       number_of_goodbots_since_sleep: 0,
-      config: config
+      config: config,
+      last_poster: nil
     }
 
     @logger = DiscordBotLogger.new(config)

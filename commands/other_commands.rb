@@ -1,5 +1,39 @@
 module OtherCommands
   def set_other_commands(bot)
+    bot.message() do |event|
+      @state[:last_poster] = event.message.author
+
+      event_message = event.message.content
+
+      is_dooming_about_anji = @anti_doomer.is_dooming_about_anji?(event_message)
+
+      if is_dooming_about_anji
+        update_last_doom_result = update_last_doom()
+
+        seconds_since_last_doom = Time.now - update_last_doom_result[:previous_doom_time]
+        time_since_last_doom = Duration.new(seconds_since_last_doom)
+        time_str_since_last_doom = if time_since_last_doom.weeks > 0
+          time_since_last_doom.format("%w weeks %d days %h hours %m minutes %s seconds")
+        elsif time_since_last_doom.days > 0
+          time_since_last_doom.format("%d days %h hours %m minutes %s seconds")
+        else
+          time_since_last_doom.format("%h hours %m minutes %s seconds")
+        end
+
+        msg = <<~MSG
+        BEEP BOOP
+        **PLEASE REFRAIN FROM DOOMING ABOUT ANJI MITO**
+        **ALL MESSAGES REGARDING ANJI MITO MUST BE SUFFICIENTLY POSITIVE**
+
+        Time since last infraction (#{time_str_since_last_doom})
+        MSG
+
+        event.respond(msg)
+      end
+    rescue => e
+      @logger.log_error(e)
+    end
+
     bot.command(:random, min_args: 0, max_args: 0, description: 'Prints a random character emoji', usage: '!random') do |event|
       logger.log_event(event)
 
@@ -41,38 +75,6 @@ module OtherCommands
       next ""
     end
 
-    bot.message() do |event|
-      event_message = event.message.content
-
-      is_dooming_about_anji = @anti_doomer.is_dooming_about_anji?(event_message)
-
-      if is_dooming_about_anji
-        update_last_doom_result = update_last_doom()
-
-        seconds_since_last_doom = Time.now - update_last_doom_result[:previous_doom_time]
-        time_since_last_doom = Duration.new(seconds_since_last_doom)
-        time_str_since_last_doom = if time_since_last_doom.weeks > 0
-          time_since_last_doom.format("%w weeks %d days %h hours %m minutes %s seconds")
-        elsif time_since_last_doom.days > 0
-          time_since_last_doom.format("%d days %h hours %m minutes %s seconds")
-        else
-          time_since_last_doom.format("%h hours %m minutes %s seconds")
-        end
-
-        msg = <<~MSG
-        BEEP BOOP
-        **PLEASE REFRAIN FROM DOOMING ABOUT ANJI MITO**
-        **ALL MESSAGES REGARDING ANJI MITO MUST BE SUFFICIENTLY POSITIVE**
-
-        Time since last infraction (#{time_str_since_last_doom})
-        MSG
-
-        event.respond(msg)
-      end
-    rescue => e
-      @logger.log_error(e)
-    end
-
     bot.command(:gitpull, min_args: 1, max_args: 1, description: 'Pull latest changes', usage: '!gitpull admin_password') do |event, password|
       logger.log_event(event)
       next "Invalid password you goober" unless password.strip == @state[:config]["ADMIN_PASSWORD"]
@@ -82,6 +84,21 @@ module OtherCommands
     rescue => e
       @logger.log_error(e)
       next ""
+    end
+
+    bot.command(:bonk, max_args: 0, description: "Sends offender to horny jail", usage: "!bonk") do |event|
+      next unless @state[:last_poster]
+
+      server_id = @bot.servers.keys.first
+      server = @bot.servers[server_id]
+      
+      member = server.members.find { |member| member.username == @state[:last_poster].username }
+      role = server.roles.find { |role| role.name ==  "c" }
+      next unless role
+
+      member.set_roles([role])
+
+      next "#{@state[:last_poster].username} has been sent to horny jail. Beep boop."
     end
   end
 
