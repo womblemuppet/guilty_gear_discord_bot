@@ -93,7 +93,7 @@ module OtherCommands
       server = @bot.servers[server_id]
       
       member = server.members.find { |member| member.username == @state[:last_poster].username }
-      role = server.roles.find { |role| role.name ==  "c" }
+      role = server.roles.find { |role| role.name ==  "criminal" }
       next unless role
 
       member.set_roles([role])
