@@ -1,9 +1,6 @@
 module OtherCommands
   def set_other_commands(bot)
     bot.message() do |event|
-      @state[:last_poster] = event.message.author
-      puts "#{@state[:last_poster].username} #{event.message}"
-
       event_message = event.message.content
 
       is_dooming_about_anji = @anti_doomer.is_dooming_about_anji?(event_message)
@@ -30,6 +27,12 @@ module OtherCommands
         MSG
 
         event.respond(msg)
+      end
+
+      is_about_feet = event_message =~ /foot|feet|may/
+      if is_about_feet
+        emoji = get_emoji("stinkytoes")
+        event.message.create_reaction(emoji)
       end
     rescue => e
       @logger.log_error(e)
