@@ -29,10 +29,10 @@ module OtherCommands
         event.respond(msg)
       end
 
-      is_about_feet = event_message =~ /foot|feet|may/
+      is_about_feet = event_message =~ /foot|feet|ram/
       if is_about_feet
-        emoji = get_emoji("stinkytoes")
-        event.message.create_reaction(emoji)
+        stinky_toes_emoji = get_emoji("stinkytoes")
+        event.message.create_reaction(stinky_toes_emoji)
       end
     rescue => e
       @logger.log_error(e)
