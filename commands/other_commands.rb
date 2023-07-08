@@ -2,6 +2,7 @@ module OtherCommands
   def set_other_commands(bot)
     bot.message() do |event|
       @state[:last_poster] = event.message.author
+      puts "#{@state[:last_poster].username} #{event.message}"
 
       event_message = event.message.content
 
@@ -35,7 +36,7 @@ module OtherCommands
     end
 
     bot.command(:random, min_args: 0, max_args: 0, description: 'Prints a random character emoji', usage: '!random') do |event|
-      logger.log_event(event)
+      @logger.log_event(event)
 
       random_character = Character.random_character()
       next get_emoji(random_character[:name].downcase)
@@ -75,30 +76,29 @@ module OtherCommands
       next ""
     end
 
-    bot.command(:gitpull, min_args: 1, max_args: 1, description: 'Pull latest changes', usage: '!gitpull admin_password') do |event, password|
+    bot.command(:gitpull, max_args: 0, description: 'Pull latest changes', usage: '!gitpull') do |event|
       logger.log_event(event)
-      next "Invalid password you goober" unless password.strip == @state[:config]["ADMIN_PASSWORD"]
 
       pull_result = `git pull`
-      next "Pulled: #{pull_result}"
+      next "Pulled:\n#{pull_result}"
     rescue => e
       @logger.log_error(e)
       next ""
     end
 
-    bot.command(:bonk, max_args: 0, description: "Sends offender to horny jail", usage: "!bonk") do |event|
-      next unless @state[:last_poster]
-
+    bot.command(:bonk, min_args: 1, max_args: 1, description: "Sends offender to horny jail", usage: "!bonk username") do |event, username|
       server_id = @bot.servers.keys.first
       server = @bot.servers[server_id]
       
-      member = server.members.find { |member| member.username == @state[:last_poster].username }
-      role = server.roles.find { |role| role.name ==  "criminal" }
-      next unless role
+      member = server.members.find { |member| member.username == username }
+      raise "Unknown user #{username}" unless member
 
-      member.set_roles([role])
+      criminal_role = server.roles.find { |role| role.name ==  "criminal" }
+      raise "Can not find role 'criminal' ! roles are #{server.roles.inspect}" unless criminal_role
 
-      next "#{@state[:last_poster].username} has been sent to horny jail. Beep boop."
+      member.set_roles([criminal_role])
+
+      next "#{username} has been sent to horny jail. beep boop"
     end
   end
 
