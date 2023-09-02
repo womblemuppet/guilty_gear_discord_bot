@@ -1,9 +1,10 @@
 # Look away
 
 class AntiDoomer
-  def initialize(sentiment_analyser, logger)
+  def initialize(sentiment_analyser, logger, disabled: false)
     @sentiment_analyser = sentiment_analyser
     @logger = logger
+    @disabled = disabled
   end
 
   def log(msg)
@@ -11,6 +12,7 @@ class AntiDoomer
   end
 
   def is_dooming_about_anji?(text)
+    return false if @disabled
     return false unless message_is_about_anji?(text)
 
     negators = count_negators(text)
