@@ -18,7 +18,7 @@ class DiscordBot
       intents: :all
     }
 
-    @bot = Discordrb::Commands::CommandBot.new(options)
+    @bot = Discordrb::Commands::CommandBot.new(**options)
     
     @state = {
       room_id: "",
