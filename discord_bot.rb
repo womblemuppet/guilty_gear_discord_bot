@@ -30,7 +30,9 @@ class DiscordBot
     @logger = DiscordBotLogger.new(config)
 
     text_mood = TextMood.new(files: ["./lang/gamer.txt", "./lang/en.txt"])
-    @anti_doomer = AntiDoomer.new(text_mood, @logger, disabled: true)
+
+    doomer_enabled = config['DOOMER_ENABLED']
+    @anti_doomer = AntiDoomer.new(text_mood, @logger, disabled: !doomer_enabled)
 
     puts "Started GG bot at #{Time.now.strftime('%d %b - %H:%M:%S')}!"
   end
